@@ -31,4 +31,4 @@ Baseline con 20 semillas: A 220.6M ± 9.6M, B 361.8M ± 9.9M (con 5 semillas B d
 - **Ninguna transformación mejora la ganancia**; se mantienen las variables crudas. Las funciones quedan en `src/features.py`.
 - **Receta metodológica:** para decidir cambios de pocos millones usar ≥ 20 semillas y diferencias pareadas; con 5 semillas el ruido de la media es de ±4–8M.
 - Para 003 (lags/deltas): no calcular deltas de las variables de tiempo transcurrido (su delta es constante) ni de `fultimo_cierre`.
-- Pendiente en 202108: el artefacto de Visa está presente en scoring y en un solo mes de train (202105). Si el modelo final se entrena con 202105 ya lo conoce; revisar en el submit final si conviene tratarlo.
+- Pendiente en 202108 (resuelto): el artefacto de Visa está presente en scoring y en un solo mes de train (202105). El final entrena con 202103–06, o sea que lo incluye; las transformaciones V1–V5 de este experimento no mejoraron (ver tabla), así que no se trató.

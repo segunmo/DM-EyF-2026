@@ -17,3 +17,6 @@ Diferencias pareadas (M ARS, ee): MIX6+REC2 − MIX6: **+0.4 (0.2) / −0.6 (0.7
 1. **La receta no suma al ensemble** (±1–2M, un fold positivo y otro nulo): el MIX6 ya está saturado en diversidad. Sola pierde 1–8M. Se puede incluir como seguro de diversidad, pero no se espera ganancia.
 2. **Promediar ranks en vez de probabilidades es ligeramente mejor y gratis**: no empeora en ningún fold (+0.1 / +1.1 / +2.3). Efecto chico (~1M); se adopta en el final por ser consistente.
 3. **Techo de este camino:** ensemble y tuning de hiperparámetros están agotados (005, 005b, 009, 009b). Para subir de verdad hacen falta otra información (features, target, pesos de mes), no más modelos del mismo tipo.
+
+## Actualización (2026-10-09)
+Esto es sobre el MIX6 **binario**. En el MIX6 **multiclase** la receta sí suma al ensemble por diversidad (023: +0.6 a +3.5M con peso 1/7, 8/9 pares; 50/50 −0.9 / +3.5 / +7.3M en A/B/Bh) y entró al final (1/3 vía `exp024`).

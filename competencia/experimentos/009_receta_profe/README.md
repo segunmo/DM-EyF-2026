@@ -16,3 +16,6 @@
 3. **Sin undersampling la receta sobreajusta rápido**: el mejor punto está en el primer checkpoint (500 rondas con lr 0.005) y cae a más rondas.
 4. **Los óptimos están en el borde de la grilla** (128 hojas, el máximo): hojas 256+ podrían mejorar; no se exploró.
 Ruido: 2 semillas, desvío de la referencia 0.3–8.4M entre semillas → diferencias de ±5M no son concluyentes.
+
+## Actualización (2026-10-09) — esta conclusión quedó corregida
+El "−12M sin undersampling" y "el undersampling sigue ayudando" valen **solo para este diseño**: modelo binario y una grilla truncada (el mejor punto estaba en el primer checkpoint, 500 rondas, y en el borde de hojas). En **021** se repitió en multiclase con grilla ampliada: sin undersampling la receta **no pierde** (+3.4M en promedio sobre Optuna en 150 columnas, en el borde de la grilla) y con undersampling queda por debajo (−1.4M). Por eso en el final la receta del profe va **sin** undersampling (componente del `exp024`). El undersampling con r≈0.1 se mantiene en los modelos de Optuna (M0/M1/M2).

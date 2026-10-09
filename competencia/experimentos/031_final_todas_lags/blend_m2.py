@@ -26,6 +26,14 @@ mix019 = rankdata(R["r017"] + R["r010"]) / len(d)                               
 actual = rankdata(mix019 + R["rrec"]) / len(d)                                       # = exp024_final (50/50 blend 019 y receta)
 final = W * R["m2"] + (1 - W) * actual
 ids = d[ID_COL].values; top = top_k_ids(ids, final, K)
-t24 = set(pd.read_csv(E.parent / "submissions" / "exp024_final_k12000.csv", header=None)[0]); tm2 = set(top_k_ids(ids, R["m2"], K))
+tm2 = set(top_k_ids(ids, R["m2"], K))
+t24 = set(top_k_ids(ids, actual, K))                                                  # exp024_final regenerado en memoria (no se lee del disco)
 print(f"peso M2 {W:.3f} | k={K} | solapamiento con exp024_final {len(set(top) & t24) / K:.1%} | con M2 solo {len(set(top) & tm2) / K:.1%} | M2 vs exp024 {len(tm2 & t24) / K:.1%}")
-print(guardar_submit(top, f"exp031_final_w{int(round(W * 100))}{'_md' if 'md' in ARCH else ''}_k{K}").name)
+nombre = f"exp031_final_w{int(round(W * 100))}{'_md' if 'md' in ARCH else ''}_k{K}"
+destino = AQUI.parents[1] / "submissions" / f"{nombre}.csv"
+if destino.exists():                                      # reproducibilidad: si ya existe, se compara en vez de fallar
+    import numpy as np
+    previo = np.loadtxt(destino, dtype=np.int64)
+    print(f"{nombre}.csv ya existía: " + ("IDÉNTICO al regenerado (mismo conjunto y mismo orden)" if np.array_equal(previo, top) else f"DISTINTO (mismo conjunto: {set(previo) == set(top)})"))
+else:
+    print(guardar_submit(top, nombre).name)

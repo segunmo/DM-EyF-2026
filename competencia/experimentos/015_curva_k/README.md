@@ -17,3 +17,6 @@
 1. **El pico depende de cuántos positivos tiene el mes**: A (870 positivos) pica en k≈7.500–8.000; B y Bh (1.098) en k≈12.000–13.000. El k óptimo ≈ 9–11× los positivos del mes. En 202108 no los conocemos (prevalencia histórica ~0.6–0.7% de ~164.6k filas → 960–1.140 positivos, o sea k óptimo ≈ 10–12k).
 2. **La curva de la media de los 3 folds es plana entre 10.000 y 12.000** (352.7–354.5M, ≤ 1.8M de diferencia: ruido). Más allá de 13.000 y por debajo de 9.500 se pierde claramente (A cae ~15M de 11.500 a 13.000).
 3. **El multiclase no corrió el k respecto del binario** (005c/PLAN: 10–14k). Elegimos **k = 11.000** (centro de la meseta, pérdida media 6.2M frente a 5.9M de 10.500 y 7.0M de 11.500; protege algo más si 202108 tiene pocos positivos como 202105).
+
+## Actualización (2026-10-09)
+El k=11.000 de acá se movió a **k=12.000** al estimar ~1.150–1.200 positivos en 202108 (018) y confirmarse una meseta en 11.5–12k en el Public (025: 97.5 / 98.0 / 98.2 / 96.8 / 96.6M para k = 11.0k…13.0k). El final usa k=12000.

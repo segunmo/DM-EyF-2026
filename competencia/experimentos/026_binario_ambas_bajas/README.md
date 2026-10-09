@@ -28,3 +28,6 @@ Mismo diseño que 010 (6 configuraciones de 005 × 6 semillas, rank medio, k=120
 | `exp026_mix` (rank medio de ambos) | **101.31** |
 
 b12 − mc = **+1.32M**. Solapamientos del top-12000: mc–b12 93.8%, mc–mix 97.0%, b12–mix 96.8%. **Lectura:** el Public no distingue los modelos con este nivel de ruido, pero en el régimen de 4 meses el binario no muestra la pérdida que daba el fold B (−4.6M ≈ −1.15M en escala Public); el +1.32M se parece más a lo que dan A y Bh (+9.2 y +5.8M ≈ +2.3 y +1.45M en escala Public). Ojo con la escala: las diferencias locales son de un mes completo y el Public es ~25%, así que hay que dividir por ~4 para compararlas; con el ruido de ±2M el experimento tenía poca potencia (la regla de ≥3M que fijé antes era inalcanzable). Los envíos son válidos y distintos; las igualdades al centavo (mc = 99.99 como el `exp010` de k=11500; mix = b12) son coincidencias de resultados discretos. Candidato a componente del blend final (`blend_final3.py`, `exp027_final3_k12000.csv`).
+
+## Actualización (2026-10-09)
+Con las 855 columnas de M2 (034) el binario con ambas bajas **pierde** frente al multiclase en L y B2 (−4.0 / −9.0M), incluso con 1 mes de train; queda descartado como componente del final.

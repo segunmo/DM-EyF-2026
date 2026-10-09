@@ -18,4 +18,4 @@ Diferencias pareadas (M ARS, ee; pares positivos): **MC_MIX6 − BIN_MIX6: +9.0 
 2. **Rank ≥ probabilidad** también con multiclase (+0.8 en B, +2.9 en Bh, ≈0 en A): se mantiene el rank medio.
 3. **M0 aporta**: sacar las 3 de M0 pierde 3.4M en A y 2.2M en Bh, y gana 0.4M en B → se mantiene el ensemble de 6.
 4. El ensemble supera al mejor modelo individual en A (+5.7M) y Bh (+5.2M) y lo iguala en B (−1.6M): mezclar sigue sirviendo.
-**Decisión:** el pipeline final es MIX6 multiclase, score condicional, rank medio, ccajas corregida (como `exp010_mc_h2`). Pendiente: 014 (modelo auxiliar de BAJA+1 con un mes más) y multiclase + lag2 como mejoras opcionales.
+**Decisión:** el pipeline final es MIX6 multiclase, score condicional, rank medio, ccajas corregida (como `exp010_mc_h2`). Los dos pendientes de entonces se resolvieron: 014 (auxiliar de BAJA+1: +0.9 a +1.5M, incluido en el 017) y multiclase + lag2 (016: +5.4M en B2). El final posterior (031) agrega todas las variables con lags (028).

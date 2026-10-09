@@ -25,5 +25,6 @@ SEMILLAS: list[int] = [852583, 771227, 676057, 482687, 399221]
 MES_SCORING = 202108
 
 # 202105: `ccajas_depositos` viene rota (todos los valores en 0, el profe lo confirmó). Con True se pone NA solo en ese mes.
-# Default False para que los experimentos anteriores (001-007) sigan siendo reproducibles; se pasa a True si 008a la valida.
+# Default False para que los experimentos anteriores (001-007) sigan siendo reproducibles. 008a no mostró efecto medible (la variable es casi toda ceros), pero se aplica por corrección de
+# datos: los scripts de 008 en adelante (y todos los del final) lo ponen en True al empezar (`config.CORREGIR_CCAJAS = True`).
 CORREGIR_CCAJAS = False

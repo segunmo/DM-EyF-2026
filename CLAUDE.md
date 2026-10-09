@@ -26,7 +26,7 @@ Nota mínima 5.50. Todo es obligatorio. Cada competencia tiene una "Línea de Mu
 
 ### Fechas clave (confirmar en Zulip, el libro tiene inconsistencias)
 - Video Miranda Wintour: **ya entregado** (no queda trabajo pendiente). El foco actual es 100% la competencia.
-- **Cierre Primera Competencia: dom 11-oct-2026 23:59:59 hora Buenos Aires** (confirmado por el alumno; la hoja de ruta del libro dice 04-oct). **Se predice 202108**; la Línea de Muerte es privada por ahora. Lanzamiento Última Competencia: ~05-oct.
+- **Cierre Primera Competencia: dom 11-oct-2026 23:59:59 hora Buenos Aires** (confirmado por el alumno; la hoja de ruta del libro dice 04-oct). **Se predice 202108**; la Línea de Muerte es privada, pero el alumno la ubica en ≈ 100M de Public (Private ≈ 3 × Public). **Submit final entregado: `exp031_final_w67_md` (Public 103.21M)**, ver `competencia/REPRODUCIR.md`. Lanzamiento Última Competencia: ~05-oct.
 - Clase plenaria 05-nov. Cierre Última Competencia: mié 09-dic 23:59. Examen individual: jue 10-dic. Video Michelina Porto: dom 13-dic. Notas: 20-dic.
 
 ### Reglas de integridad académica (importante para el trabajo con agentes)
@@ -46,7 +46,7 @@ Dataset a nivel cliente-mes (`numero_de_cliente`, `foto_mes`), solo titulares de
 - `BAJA+2`: está en t+1 pero no en t+2. **Es el positivo a predecir** (se llega a tiempo con un estímulo).
 - `NULL` en los últimos 2 meses (no se conoce el futuro): ese tramo es para scoring, **nunca para entrenar ni medir**.
 
-Positivos = {BAJA+2}; negativos = {BAJA+1, CONTINUA} (≈0.6% positivos). Alternativa a explorar: target binario BAJA+1+BAJA+2 (en `z601` empeora la ganancia con el mismo umbral; ver `resumenes/`).
+Positivos = {BAJA+2}; negativos = {BAJA+1, CONTINUA} (≈0.6% positivos). El target binario BAJA+1+BAJA+2 se exploró (026, 034): con poco train y 150 columnas ayuda, pero con la historia completa pierde frente al **multiclase** CONTINUA/BAJA+1/BAJA+2 con score P(BAJA+2)/(1−P(BAJA+1)), que es lo que usa el final (010, 013, 028).
 
 ### Función de ganancia (campaña de retención)
 - Estimular a un cliente que es BAJA+2: **+1.072.500**. Estimular a cualquier otro: **−27.500**. No estimular: 0.
@@ -67,7 +67,8 @@ docs/            DMEyF_2026.md (libro, para agentes), DMEyF_2026.pdf (fuente), d
 clases/          notebooks z1xx..zNxx de cada clase (+ z501_cluster_rf.py)
 resumenes/       resúmenes teóricos en español, uno por tema (README.md = índice y estado)
 competencia/     trabajo de la competencia
-  PLAN.md        plan acordado: decisiones, esquema de validación, experimentos 002-008, estrategia de submits
+  PLAN.md        plan acordado y estado final: decisiones, esquema de validación, experimentos, estrategia de submits
+  REPRODUCIR.md  cómo regenerar el submit final desde el dataset + evidencia y límites de cada decisión
   README.md      reglas, flujo de trabajo, convenciones de submissions
   LOG.md         bitácora de experimentos y puntajes (actualizar SIEMPRE)
   src/           código reutilizable (config, ganancia, carga de datos)
@@ -76,6 +77,7 @@ competencia/     trabajo de la competencia
 data/            CSVs (ignorado por git)
 artifacts/       modelos .sav/.txt y bases de Optuna (ignorado por git)
 venv/            entorno Python 3.14 (ignorado por git); dependencias en requirements.txt
+research/        investigación de estrategias de la literatura/industria (hipótesis, no medidas)
 ```
 
 ## Notebooks de clase (`clases/`)
@@ -95,7 +97,7 @@ Convenciones vistas: train en `202103`, test out-of-time en `202105`; `ganancia_
 **Rutas:** los notebooks ya fueron adaptados para correr local **desde `clases/`** (Jupyter con cwd = `clases/`): `dataset_path='../data/'`, modelos en `../artifacts/modelos/`, bases de Optuna en `../artifacts/optuna/`, y las semillas de la cátedra se reemplazaron por las propias. `z701` genera `data/competencia_01.parquet.gzip` desde el CSV si no existe y entrena `lgb_train_202103/04.txt` (params fijos, no optimizados) si faltan los modelos de la cátedra. Los notebooks se pueden editar libremente; para experimentos de la competencia copiar a `competencia/experimentos/`. `z501`: `python clases/z501_cluster_rf.py --csv data/competencia_01.csv --out docs/clusters_tendencias.pdf` desde la raíz.
 
 ## Entrega (submit) de la competencia
-Por Zulip, mensaje con cuerpo `submit    NombreInterno` (nombre único por submit, sin espacios) y 1–20 adjuntos `.csv`. Cada CSV: solo los `numero_de_cliente` a estimular (**8000–15000 filas**), **sin encabezado**, enteros (¡sin notación científica!). Máx. 13 submits/día (se renueva 21:00 ART). El bot responde con *Public Gain mean* y *std dev* (≈25% de los datos, sin escalar, en millones de ARS). Detalle y helper en `competencia/README.md` y `competencia/src/submit.py`. Registrar cada submit en `competencia/submissions/REGISTRO.md`.
+Por Zulip, mensaje con cuerpo `submit    NombreInterno` (nombre único por submit, sin espacios) y 1–20 adjuntos `.csv`. Cada CSV: solo los `numero_de_cliente` a estimular (**8000–15000 filas**), **sin encabezado**, enteros (¡sin notación científica!). Máx. 13 submits/día al inicio (el bot llegó a mostrar 17 y 23; se renueva 21:00 ART). **El último submit antes del cierre es el final y debe ser un solo archivo.** El bot responde con *Public Gain mean* y *std dev* (≈25% de los datos, sin escalar, en millones de ARS). Detalle y helper en `competencia/README.md` y `competencia/src/submit.py`. Registrar cada submit en `competencia/submissions/REGISTRO.md`.
 
 ## Cómo trabajar (guía para agentes)
 
@@ -108,6 +110,6 @@ Por Zulip, mensaje con cuerpo `submit    NombreInterno` (nombre único por submi
 7. **Git:** repo local; los commits chicos y frecuentes por experimento. Datos, modelos y venv están en `.gitignore`. No subir tokens (el libro pide un GitHub PAT; guardarlo fuera del repo).
 
 ## Pendiente / por confirmar con el usuario
-- Meses de train/validación a usar para predecir 202108 (los notebooks usan 202103→202105; 202107 solo tiene target parcial, ver EDA).
-- Línea de Muerte de la Primera Competencia: privada por ahora.
+- ✅ Resuelto en la Primera Competencia: se entrena con 202103–06 (202107 solo aporta BAJA+1, al modelo auxiliar); se valida en folds out-of-time sobre 202105/202106 (ver `competencia/PLAN.md`). Para la Última Competencia habrá más meses: usar walk-forward real, no los folds solapados L/B2.
+- Línea de Muerte de la Primera Competencia: privada; ≈ 100M de Public según el alumno.
 - Uso de Google Cloud / R+data.table: la cátedra los plantea; hoy el trabajo es local en Python.

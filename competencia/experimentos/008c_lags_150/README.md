@@ -26,3 +26,6 @@
 2. **Lag2 sí suma sobre lag1** en ambos folds (+10.8 y +5.4), consistente con 008b (50 variables: +10.8 / −2.4), pero el neto contra el pool actual (V2 − V0) no es significativo (+6.9 y +1.9, ee ≈ 5.5).
 3. Lag2 sobre 50 variables rinde igual que sobre 142 con ~600 columnas menos → **se descarta la expansión a 142 variables**; el candidato es el pool actual + lag2 de las 50 (008b), ya validado en el submit de control (Public 98.97M).
 Lo que "se dice" de las 1.500 columnas no se reproduce acá con lags de más variables; queda por probar otra clase de columnas (hojas de Random Forest, ver el mensaje del profe 1.5).
+
+## Actualización (2026-10-09) — superado por 028
+"Más variables con historia no ayudan" vale para este diseño: **binario, parámetros base, solo lag1/delta1/ratio1 y sin lag2**. En **028** (multiclase con hiperparámetros tuneados, lag1 + lag2 + diferencias, 142 variables, 855–863 columnas, sin selección) usar todas las variables **sí** ayuda: +10.5M sobre el pool de 150 columnas en B2, 8/8 pares; con control de historia barajada (029) y en ensemble (030). La receta ganadora es la que usaban compañeros con Public > 100. Este README conserva el resultado tal como se midió entonces.

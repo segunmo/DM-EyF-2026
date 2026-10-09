@@ -18,3 +18,6 @@ Diferencias pareadas (M ARS, ee): **MC_h2 − BIN_005: +7.5 (1.5) / +10.5 (2.1) 
 2. **Dejar los BAJA+1 completos como negativos en un binario perjudica** (`BIN_misma` −14 a −17M vs `BIN_005`): son parecidos a los positivos y confunden al binario; el multiclase los separa.
 3. **Mezclar binario + multiclase por rank no sirve** (BIN+MC < MC_h2): el binario arrastra al multiclase hacia abajo.
 Limitaciones: hiperparámetros tuneados para binario (el multiclase podría mejorar con su propio Optuna); falta validar el ensemble multiclase de 6 configuraciones (M0 y M1). El número de rondas del multiclase equivale a 3 árboles por ronda.
+
+## Actualización (2026-10-09)
+La limitación de arriba ("falta validar el ensemble multiclase de 6 configuraciones") se resolvió en **013** (+5.5 a +9.3M sobre el MIX6 binario, 15/15 pares). Sobre el score: 018 mostró que sumar P1 ayuda con poco train y que la ventaja se achica con más datos; con las 855 columnas (034) el binario con ambas bajas pierde, así que no hace falta sumar P1 explícitamente.
