@@ -1,0 +1,4 @@
+comparacion,L_delta,L_ee,B2_delta,B2_ee,pares_positivos
+V1_lag2 - V0_sin_lag2,18.92,3.65,5.42,2.33,9/10
+V1c_lag2_barajado - V0_sin_lag2,-3.44,6.45,-19.66,3.56,2/10
+V1_lag2 - V1c_lag2_barajado,22.36,7.09,25.08,4.92,10/10

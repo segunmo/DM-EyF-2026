@@ -1,0 +1,34 @@
+# Entorno
+venv/
+.venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.DS_Store
+
+# Datos (pesan cientos de MB; el repo personal es público)
+data/
+*.csv.gz
+*.parquet
+*.parquet.gzip
+# ...excepto los diccionarios de la cátedra
+!docs/*.csv
+
+# Artefactos de modelos / Optuna
+artifacts/
+*.sav
+*.pkl
+*.db
+*.sqlite
+
+# Secretos
+.env
+*token*
+*.pem
+
+# Salidas intermedias de los experimentos (scores por cliente, copias de stdout)
+competencia/experimentos/**/tmp/
+competencia/experimentos/**/*salida*.txt
+
+# Los submits (listas de numero_de_cliente, derivadas de los datos) NO se versionan: el repo es público. Queda el registro en REGISTRO.md
+competencia/submissions/*.csv

@@ -1,0 +1,3 @@
+comparacion,B_delta,B_ee,Bh_delta,Bh_ee,L_delta,L_ee,B2_delta,B2_ee
+V1_150vars_lag1 - V0_50vars_lag1,-3.63,5.585,0.66,3.231,-3.85,4.773,-3.52,4.25
+V2_150vars_lag1_lag2 - V1_150vars_lag1,,,,,10.78,3.233,5.39,4.293

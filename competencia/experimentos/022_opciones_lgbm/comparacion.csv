@@ -1,0 +1,6 @@
+variante,A_delta,B_delta,Bh_delta,A_ee,B_ee,Bh_ee,pares_positivos
+extra_trees,-2.1,-8.53,-4.78,2.46,3.63,2.73,3/12
+path_smooth5,-0.07,-0.72,0.65,0.62,1.69,1.6,6/12
+path_smooth20,0.07,-0.55,1.24,0.6,1.42,1.83,5/12
+min_gain0.5,1.07,-6.5,-2.06,0.62,2.29,1.08,3/12
+extra+smooth5,-2.34,-11.0,-6.39,2.24,2.69,2.74,2/12

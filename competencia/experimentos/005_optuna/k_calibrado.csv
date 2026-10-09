@@ -1,0 +1,4 @@
+fold,positivos_reales,positivos_esperados(sum p_cal),k_estimado,k_real_optimo,n_p_cal>=0.025,gan@k_est,gan@k_real,gan@11500,gan_esperada@k_est
+A,870,640.0,5741,8564,5745,228.2,261.7,241.4,306.6
+B,1098,727.0,6140,13184,6146,324.0,418.4,409.8,361.3
+Bh,1098,714.0,5853,10778,5852,310.9,405.4,399.8,387.6

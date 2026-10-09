@@ -1,0 +1,11 @@
+mes_a,mes_b,auc,top5
+202103,202104,0.838,"Master_mlimitecompra (0.08), mcomisiones (0.07), Master_mfinanciacion_limite (0.06), Visa_mlimitecompra (0.06), Visa_msaldodolares (0.05)"
+202104,202105,0.831,"Visa_mlimitecompra (0.15), Visa_mpagado (0.14), Master_mlimitecompra (0.09), Visa_mfinanciacion_limite (0.09), Visa_mconsumosdolares (0.08)"
+202105,202106,0.877,"mpayroll (0.13), Master_mlimitecompra (0.11), mcomisiones_mantenimiento (0.09), Visa_mpagado (0.09), Master_mfinanciacion_limite (0.08)"
+202106,202107,0.918,"mcomisiones_mantenimiento (0.33), Visa_mlimitecompra (0.08), mpayroll (0.08), cpayroll_trx (0.06), Master_mlimitecompra (0.05)"
+202107,202108,0.841,"Visa_mpagado (0.12), Master_mlimitecompra (0.10), Master_mfinanciacion_limite (0.10), Master_Fvencimiento (0.09), Visa_mlimitecompra (0.08)"
+202106,202108,0.934,"mcomisiones_mantenimiento (0.36), mpayroll (0.06), Visa_mpagado (0.06), cpayroll_trx (0.06), Master_mlimitecompra (0.06)"
+202105,202108,0.929,"mcomisiones_mantenimiento (0.46), Master_Fvencimiento (0.06), Visa_mlimitecompra (0.06), Master_mfinanciacion_limite (0.05), Visa_mconsumosdolares (0.04)"
+202104,202108,0.947,"mcomisiones_mantenimiento (0.41), Master_Fvencimiento (0.09), Visa_mpagado (0.07), Visa_Fvencimiento (0.04), Visa_mfinanciacion_limite (0.04)"
+202103,202108,0.961,"mcomisiones_mantenimiento (0.38), Master_Fvencimiento (0.11), Visa_mpagado (0.06), Master_fechaalta (0.04), mcomisiones (0.04)"
+202103-06,202108,0.924,"mcomisiones_mantenimiento (0.46), Master_Fvencimiento (0.08), Master_mfinanciacion_limite (0.06), Visa_mpagado (0.04), Visa_Fvencimiento (0.03)"

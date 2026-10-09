@@ -1,0 +1,4 @@
+comparacion,L_delta,L_ee,L_auc,B2_delta,B2_ee,B2_auc
+V1_lag2 - V0_lag1,10.835,3.3424,0.0024,-2.365,3.1472,0.0006
+V1c_lag2_barajado - V0_lag1,-22.165,4.2873,-0.0022,-24.805,3.2164,-0.0026
+V1_lag2 - V1c_lag2_barajado,33.0,4.2046,0.0046,22.44,2.9358,0.0032

@@ -1,0 +1,6 @@
+comparacion,B_delta,B_ee,Bh_delta,Bh_ee,pares_positivos
+V1_aux_extra - V0_actual,0.88,0.32,1.46,0.45,16/20
+V2_aux_mismos - V0_actual,0.67,0.27,0.78,0.29,16/20
+V1_aux_extra - V2_aux_mismos,0.21,0.28,0.67,0.23,12/20
+V3_prom - V0_actual,0.23,0.24,0.89,0.33,15/20
+V4_peso2 - V0_actual,-3.67,1.04,,,2/10

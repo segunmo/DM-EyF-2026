@@ -1,0 +1,19 @@
+# Dependencias usadas por los notebooks de clase (inferidas de sus imports).
+# Instalar con: source venv/bin/activate && pip install -r requirements.txt
+numpy
+pandas
+scipy
+scikit-learn
+duckdb
+duckdb-engine
+jupysql
+lightgbm
+optuna
+matplotlib
+seaborn
+plotly
+tqdm
+requests
+joblib
+jupyterlab
+pyarrow

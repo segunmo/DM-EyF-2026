@@ -1,0 +1,4 @@
+comparacion,L_delta,B2_delta,L_ee,B2_ee,pares_positivos
+V1_lag2_50 - V0_top150,20.93,3.4,4.07,2.88,7/8
+V2_todas_lags - V0_top150,23.0,13.85,4.14,1.55,8/8
+V2_todas_lags - V1_lag2_50,2.06,10.45,0.4,2.69,8/8
