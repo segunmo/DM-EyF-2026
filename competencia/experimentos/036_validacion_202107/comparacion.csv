@@ -1,0 +1,8 @@
+comparacion,delta_M,ee,pares_positivos,delta_auc
+V1_lag2_50 - V0_top150,8.03,1.7298,5/5,0.0009
+V2_todas - V1_lag2_50,11.715,2.0877,5/5,0.0025
+V2_todas - V0_top150,19.745,2.122,5/5,0.0034
+V2_md50 - V2_todas,-0.385,1.7187,1/5,0.0003
+V3_todas_sin_cal - V2_todas,-1.4575,1.8471,1/5,0.0002
+V4_top150_sin_cal - V0_top150,0.5225,1.5722,3/5,-0.0002
+V5_todas_w2 - V2_todas,-1.1275,1.4305,1/5,-0.0003

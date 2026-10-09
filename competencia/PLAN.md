@@ -2,6 +2,7 @@
 
 **Deadline:** dom 11-oct-2026 23:59:59 (hora Buenos Aires). Se predice **202108**.
 > **ESTADO FINAL (2026-10-09): submit entregado = `exp031_final_w67_md_k12000.csv`, un solo archivo, Public 103.21M** (Línea de Muerte ≈ 100M en Public; Private ≈ 3 × Public). Es el rank 2/3 de M2 (multiclase CONTINUA/BAJA+1/BAJA+2 con todas las variables con lag1, lag2 y diferencias, 855 columnas, 3 configs × 10 semillas) + 1/3 del blend anterior (017 + 010 + receta del profe), k=12000. Receta para regenerarlo: [`REPRODUCIR.md`](REPRODUCIR.md). Evidencia y descartes: [`LOG.md`](LOG.md) y [`submissions/REGISTRO.md`](submissions/REGISTRO.md).
+> **Plan de cierre de huecos (auditoría + reglas de decisión fijadas de antemano): [`COBERTURA.md`](COBERTURA.md) §7–12.**
 > Este documento conserva el plan original (2026-10-03) y su evolución como historia: las secciones de abajo se escribieron antes de los resultados que se indican; donde algo cambió, está marcado con ✅/→.
 Leer también: `LOG.md` (resultados), `README.md` (formato de submit), `../CLAUDE.md` (contexto y reglas).
 
