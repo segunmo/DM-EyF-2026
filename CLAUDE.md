@@ -34,7 +34,7 @@ Nota mínima 5.50. Todo es obligatorio. Cada competencia tiene una "Línea de Mu
 - Se verifica originalidad: la solución final debe ser sustancialmente distinta de la de los compañeros y un aporte real sobre los notebooks de la cátedra (no vale solo cambiar la semilla).
 - **Examen individual (jue 10-dic)** sobre la Última Competencia: oral o escrito, **sin LLMs** ni internet; preguntan por cada parte del código y cada decisión. Consecuencia: el código debe ser simple, legible y el alumno debe entender cada decisión. Cuando generes código, **explicá el porqué**, no entregues cajas negras. Detectar no-autoría reprueba la materia.
 - Las competencias tienen restricciones de algoritmos/datos: leer el enunciado de cada una y respetarlas estrictamente.
-- Semillas propias (primos, Check-in de Zulip): **852583, 771227, 676057, 482687, 399221** (en `competencia/src/config.py` → `SEMILLAS`). Usar siempre estas, nunca las de ejemplo de la cátedra.
+- Semillas propias (primos, Check-in de Zulip): **852583, 771227, 676057, 482687, 399221** (en `competencia/src/config.py` → `SEMILLAS`). Usar siempre estas, nunca las de ejemplo de la cátedra. Cuando hacen falta más réplicas, las únicas permitidas son las **derivadas explícitas de `config.py`** (`SEMILLAS_DERIVADAS`, `SEMILLAS_20`, `SEMILLAS_FINAL`, `semillas(n)`); ver la regla 8 de "Cómo trabajar".
 
 ## El problema y el target
 
@@ -71,7 +71,10 @@ competencia/     trabajo de la competencia
   REPRODUCIR.md  cómo regenerar el submit final desde el dataset + evidencia y límites de cada decisión
   README.md      reglas, flujo de trabajo, convenciones de submissions
   LOG.md         bitácora de experimentos y puntajes (actualizar SIEMPRE)
-  src/           código reutilizable (config, ganancia, carga de datos)
+  src/           código reutilizable (config con las semillas, ganancia, carga de datos, modelos = guardado y huellas)
+  preparar_datos.py          baja el dataset y construye CSV + parquet (reemplaza a los notebooks z101/z701)
+  verificar_determinismo.py  comprobación de ~1 min del entorno;  verificar_modelos.py  compara modelos regenerados con el manifiesto
+  modelos_manifiesto.csv     huellas SHA-256 de cada modelo guardado (versionado; los modelos viven en artifacts/modelos_final/)
   experimentos/  un directorio por experimento: NNN_descripcion/
   submissions/   CSVs enviados (chicos) con su registro
 data/            CSVs (ignorado por git)
@@ -107,7 +110,16 @@ Por Zulip, mensaje con cuerpo `submit    NombreInterno` (nombre único por submi
 4. **Escala de ganancia:** si se evalúa sobre una fracción de los datos, escalar por `1/prop` (como en z601). El corte óptimo puede ser por **cantidad de envíos** y no solo por probabilidad (cambia si se cambia la clase).
 5. **Código:** simple y comentado con el porqué. Reutilizar `competencia/src/` (importar con `sys.path` apuntando a `competencia/src`). Python 3.14 en `venv/` (`source venv/bin/activate`), con todas las dependencias de `requirements.txt` ya instaladas (lightgbm, optuna, plotly, seaborn, jupysql, jupyterlab, pyarrow…). Los datasets pesan cientos de MB: preferir DuckDB (lazy sobre el CSV/parquet) a cargar todo en pandas.
 6. **Resúmenes:** cuando se agregue un notebook nuevo en `clases/`, sumar o actualizar el resumen del tema en `resumenes/` (con ejemplos mínimos y vínculo al notebook) y la tabla de arriba. Enfoque más teórico que el de las clases: intuición, fórmulas, trampas, preguntas de repaso.
-7. **Git:** repo local; los commits chicos y frecuentes por experimento. Datos, modelos y venv están en `.gitignore`. No subir tokens (el libro pide un GitHub PAT; guardarlo fuera del repo).
+7. **Git:** repo local; los commits chicos y frecuentes por experimento. Datos, modelos y venv están en `.gitignore` (de los modelos se versiona solo el manifiesto de huellas). No subir tokens (el libro pide un GitHub PAT; guardarlo fuera del repo).
+8. **Reproducibilidad determinista (obligatoria):** todo experimento y toda entrega debe dar **siempre el mismo resultado** con las mismas semillas y el mismo entorno. Para eso:
+   - **Semillas solo de `competencia/src/config.py`** (`SEMILLAS`, `SEMILLAS_DERIVADAS`, `SEMILLAS_20`, `SEMILLAS_FINAL`, `semillas(n)`): nunca escribir una semilla a mano en un script, nunca generarla al vuelo ni leerla de un archivo de resultados. Si hacen falta más, se agregan **explícitas** a `config.py` con su origen documentado. La semilla se pasa a **todo** el azar (parámetro `seed` de LightGBM, máscaras de undersampling, Random Forest, particiones).
+   - **Orden de filas fijo:** cargar siempre con `data.cargar_meses` / `historia.cargar_con_lags` (ya llevan `ORDER BY foto_mes, numero_de_cliente`). El orden por defecto de DuckDB cambia entre corridas y el undersampling sortea por posición: sin esto, cada corrida entrena con otros clientes (causa del hallazgo del 2026-10-10, ver `competencia/REPRODUCIR.md` §0).
+   - **LightGBM determinista:** usar `PARAMS_BASE` de `src/validacion.py` (`deterministic=True`, `force_row_wise=True`).
+   - **Entorno fijo:** `requirements-lock.txt`; no actualizar librerías sin volver a correr `competencia/verificar_determinismo.py`.
+   - **Caches posicionales** (`tmp/*.npy`): usar `modelos.verificar_orden_cache` para no mezclar predicciones con otro orden de filas.
+   - **Que corra desde un clon:** nada de rutas absolutas ni dependencias de archivos no versionados (salvo `data/`, que genera `competencia/preparar_datos.py`). Todo script nuevo que alimente una entrega debe quedar documentado en `competencia/REPRODUCIR.md`.
+   - **Verificar:** dos corridas independientes deben dar las mismas huellas; si no coinciden, hay una fuente de no determinismo y hay que encontrarla antes de seguir.
+9. **Guardar cada modelo:** todo modelo cuya predicción se use (validación o entrega) se guarda con `modelos.guardar_modelo(booster, nombre, prediccion)`: el modelo va a `artifacts/modelos_final/` (fuera de git, ~35 MB cada uno) y su huella SHA-256 al manifiesto versionado `competencia/modelos_manifiesto.csv`. Nombre: `<experimento>_<descripcion>_<semilla>`. Motivo: reentrenar cuesta 30–90 minutos y un cambio de código sin modelos guardados obliga a rehacer todo. No commitear los modelos; sí el manifiesto. En experimentos de validación, como mínimo guardar las predicciones.
 
 ## Pendiente / por confirmar con el usuario
 - ✅ Resuelto en la Primera Competencia: se entrena con 202103–06 (202107 solo aporta BAJA+1, al modelo auxiliar); se valida en folds out-of-time sobre 202105/202106 (ver `competencia/PLAN.md`). Para la Última Competencia habrá más meses: usar walk-forward real, no los folds solapados L/B2.
