@@ -27,6 +27,7 @@ import config  # noqa: E402
 config.CORREGIR_CCAJAS = True
 from config import ID_COL, MES_SCORING, SEMILLAS, TARGET_COL  # noqa: E402
 from historia import agregar_historia_n  # noqa: E402
+from modelos import guardar_modelo, verificar_orden_cache  # noqa: E402
 from optuna_run import es_hist  # noqa: E402
 from pool import VARS, cargar  # noqa: E402
 from submit import guardar_submit, top_k_ids  # noqa: E402
@@ -57,7 +58,7 @@ def escribir(msg):
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(); ap.add_argument("--semillas", type=int, default=30); ap.add_argument("--k", type=int, default=11500)
     ap.add_argument("--lag2", action="store_true"); args = ap.parse_args()
-    semillas = SEMILLAS + [int(s) for s in np.random.RandomState(SEMILLAS[0]).randint(100_003, 999_983, size=max(args.semillas - len(SEMILLAS), 0))]
+    semillas = config.semillas(args.semillas)                       # semillas explícitas en config.py (5 propias + derivadas)
     semillas = semillas[:args.semillas]
     TAG = "conlag2" if args.lag2 else "sinlag2"        # antes el sufijo era lag0/lag1 (valor del flag) y confundía
     TMP.mkdir(exist_ok=True)
@@ -75,6 +76,7 @@ if __name__ == "__main__":
     y1 = (da[TARGET_COL] == "BAJA+1").astype(int).values
     escribir(f"\n===== final 017 {time.strftime('%Y-%m-%d %H:%M')} | principal {dt.shape} | auxiliar {da.shape} (BAJA+1: {y1.sum()}) | score {score.shape} | "
              f"{len(semillas)} semillas x {len(cfg)} configs | k={args.k} | lag2={args.lag2} | M0 {len(cols['M0'])} cols, M1 {len(cols['M1'])} cols =====")
+    verificar_orden_cache(TMP, score[ID_COL].values)                     # no mezclar predicciones cacheadas con otro orden de filas
     t0, S = time.time(), {}
     for (c, nombre), (r, rondas, params) in cfg.items():
         ps = []
@@ -85,7 +87,10 @@ if __name__ == "__main__":
                 mc = lgb.train({**params, "objective": "multiclass", "num_class": 3, "seed": s}, lgb.Dataset(dt.loc[keep, cols[c]], label=y3[keep]), num_boost_round=rondas)
                 p2 = mc.predict(score[cols[c]])[:, 2]
                 ka = (y1 == 1) | (np.random.RandomState(s + 1).rand(len(y1)) < r)
-                p1 = lgb.train({**params, "seed": s}, lgb.Dataset(da.loc[ka, cols[c]], label=y1[ka]), num_boost_round=rondas).predict(score[cols[c]])
+                aux = lgb.train({**params, "seed": s}, lgb.Dataset(da.loc[ka, cols[c]], label=y1[ka]), num_boost_round=rondas)
+                p1 = aux.predict(score[cols[c]])
+                guardar_modelo(mc, f"017_{TAG}_principal_{c}_{nombre}_{s}", p2)      # modelos en artifacts/ (no versionado) + huellas en el manifiesto
+                guardar_modelo(aux, f"017_{TAG}_auxiliar_{c}_{nombre}_{s}", p1)
                 np.save(f, p2 / np.clip(1 - p1, 1e-6, None))
             ps.append(np.load(f))
         S[f"{c}_{nombre}"] = np.mean(ps, axis=0)

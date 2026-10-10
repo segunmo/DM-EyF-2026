@@ -180,3 +180,15 @@ Para poder volver más adelante y entender los términos, números y nombres que
 - `REPRODUCIR.md`: cómo regenerar el final y la evidencia de cada decisión.
 - `COBERTURA.md`: auditoría de lo que proponían las fuentes y plan de lo que falta.
 - `PLAN.md`: el plan original y su estado final.
+
+## 12. Reproducibilidad
+| Término | Qué es |
+|---|---|
+| **Determinismo** | Que el mismo código, los mismos datos y las mismas semillas den **siempre** el mismo resultado. Se rompe con orden de filas variable, hilos y versiones de librerías |
+| **Orden de filas** | Posición de cada cliente en el DataFrame. Importa porque el undersampling sortea por posición (`rand(n) < r`): otro orden = otra muestra de clientes = otro modelo |
+| **`ORDER BY` explícito** | Fija el orden de salida de DuckDB (sin él, un join paralelo devuelve filas en orden distinto entre corridas). Se agregó el 2026-10-10 (REPRODUCIR §0) |
+| **Huella (hash)** | Resumen corto (md5) de un arreglo para comparar si dos corridas produjeron exactamente lo mismo (`verificar_determinismo.py`) |
+| **`deterministic` / `force_row_wise`** | Opciones de LightGBM que fijan el resultado con cualquier cantidad de hilos |
+| **Semillas derivadas** | Las 25 semillas generadas a partir de la primera propia (`config.SEMILLAS_DERIVADAS`): reproducibles, pero no registradas en el check-in |
+| **`requirements-lock.txt`** | Versiones exactas de las librerías con las que se generó el final |
+| **Manifiesto de modelos** | `competencia/modelos_manifiesto.csv`: huellas SHA-256 de cada modelo y su predicción. Es lo versionable (los modelos pesan decenas de MB cada uno y viven en `artifacts/`, fuera de git) |

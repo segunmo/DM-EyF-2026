@@ -18,6 +18,7 @@ sys.path.insert(0, str(AQUI.parents[1] / "src")); sys.path.insert(0, str(AQUI.pa
 import config  # noqa: E402
 config.CORREGIR_CCAJAS = True
 from config import ID_COL, MES_SCORING, SEMILLAS, TARGET_COL  # noqa: E402
+from modelos import guardar_modelo, verificar_orden_cache  # noqa: E402
 from optuna_run import es_hist  # noqa: E402
 from pool import cargar  # noqa: E402
 from submit import guardar_submit, top_k_ids  # noqa: E402
@@ -44,7 +45,7 @@ def escribir(msg):
 
 
 if __name__ == "__main__":
-    semillas = (SEMILLAS + [121109])[:N_SEM]
+    semillas = config.semillas(N_SEM)                               # semillas explícitas en config.py
     cfg = configs_desde_json()
     dt = cargar([202103, 202104, 202105, 202106], negocio=True)
     score = cargar([MES_SCORING], solo_con_target=False, negocio=True)
@@ -52,22 +53,34 @@ if __name__ == "__main__":
     Xt0, _ = xy(dt)
     cols = {"M0": [c for c in Xt0.columns if not es_hist(c)], "M1": (A005 / "sel" / "top150_final.txt").read_text().split()}
     escribir(f"\n===== final 010 {time.strftime('%Y-%m-%d %H:%M')} | train {dt.shape} (BAJA+1 {(y3==1).sum()}, BAJA+2 {(y3==2).sum()}) | score {score.shape} | semillas {semillas} =====")
+    verificar_orden_cache(AQUI / "tmp", score[ID_COL].values)            # no mezclar predicciones cacheadas con otro orden de filas
     t0, P = time.time(), {}
     for (c, nombre), (r, rondas, params) in cfg.items():
         ps = []
         for s in semillas:
-            keep = (y3 >= 1) | (np.random.RandomState(s).rand(len(y3)) < r)
-            m = lgb.train({**params, "objective": "multiclass", "num_class": 3, "seed": s},
-                          lgb.Dataset(dt.loc[keep, cols[c]], label=y3[keep]), num_boost_round=rondas)
-            pm = m.predict(score[cols[c]])
-            ps.append(pm[:, 2] / np.clip(1 - pm[:, 1], 1e-6, None))          # score condicional
+            f = AQUI / "tmp" / f"mc_{c}_{nombre}_{s}.npy"                          # cache por (configuración, semilla): se reanuda si se corta
+            if not f.exists():
+                keep = (y3 >= 1) | (np.random.RandomState(s).rand(len(y3)) < r)
+                m = lgb.train({**params, "objective": "multiclass", "num_class": 3, "seed": s},
+                              lgb.Dataset(dt.loc[keep, cols[c]], label=y3[keep]), num_boost_round=rondas)
+                pm = m.predict(score[cols[c]])
+                sc_ = pm[:, 2] / np.clip(1 - pm[:, 1], 1e-6, None)                  # score condicional
+                (AQUI / "tmp").mkdir(exist_ok=True)
+                guardar_modelo(m, f"010_{c}_{nombre}_{s}", sc_)
+                np.save(f, sc_)
+            ps.append(np.load(f))
         P[f"{c}_{nombre}"] = np.mean(ps, axis=0)
         escribir(f"listo {c} {nombre} ({(time.time()-t0)/60:.0f} min)")
     ids = score[ID_COL].values
     rk = np.mean([rankdata(p) / len(p) for p in P.values()], axis=0)           # rank medio de los 6 (009b)
     (AQUI / "tmp").mkdir(exist_ok=True)
     pd.DataFrame({ID_COL: ids, "rank": rk, **P}).to_csv(AQUI / "tmp" / "proba_202108.csv", index=False)
-    escribir(guardar_submit(top_k_ids(ids, rk, K), f"exp010_mc_h2_k{K}").name)
+    top = top_k_ids(ids, rk, K); destino = AQUI.parents[1] / "submissions" / f"exp010_mc_h2_k{K}.csv"
+    if destino.exists():                                  # reproducibilidad: si ya existe, se compara en vez de fallar
+        previo = np.loadtxt(destino, dtype=np.int64)
+        escribir(f"{destino.name} ya existía: " + ("IDÉNTICO al regenerado" if np.array_equal(previo, top) else f"DISTINTO (coinciden {len(set(previo) & set(top)) / K:.1%} de los clientes)"))
+    else:
+        escribir(guardar_submit(top, f"exp010_mc_h2_k{K}").name)
     for previo in ("exp005_final_s30_k11500", "exp008_lag2_ccajas_k11500"):
         f = AQUI.parents[1] / "submissions" / f"{previo}.csv"
         if f.exists():

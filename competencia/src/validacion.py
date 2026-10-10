@@ -31,6 +31,8 @@ PARAMS_BASE = {
     "num_leaves": 31, "learning_rate": 0.05, "min_data_in_leaf": 200,
     "feature_fraction": 0.5, "bagging_fraction": 0.8, "bagging_freq": 1,
     "feature_pre_filter": False, "verbose": -1, "num_threads": 0,
+    # Reproducibilidad: mismo resultado con cualquier cantidad de hilos/máquina (verificado: no cambia el modelo respecto de no ponerlo)
+    "deterministic": True, "force_row_wise": True,
 }
 KS = list(range(8000, 15001, 1000))   # cantidades de envíos candidatas (rango permitido por el bot)
 K_REF = 11000                         # k de referencia para comparar experimentos

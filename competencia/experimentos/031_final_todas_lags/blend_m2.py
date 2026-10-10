@@ -34,6 +34,10 @@ destino = AQUI.parents[1] / "submissions" / f"{nombre}.csv"
 if destino.exists():                                      # reproducibilidad: si ya existe, se compara en vez de fallar
     import numpy as np
     previo = np.loadtxt(destino, dtype=np.int64)
-    print(f"{nombre}.csv ya existía: " + ("IDÉNTICO al regenerado (mismo conjunto y mismo orden)" if np.array_equal(previo, top) else f"DISTINTO (mismo conjunto: {set(previo) == set(top)})"))
+    if np.array_equal(previo, top):
+        print(f"{nombre}.csv ya existía: IDÉNTICO al regenerado (mismo conjunto y mismo orden)")
+    else:                                                 # no se pisa el enviado: el regenerado queda con sufijo para poder compararlos
+        print(f"{nombre}.csv ya existía y es DISTINTO: coinciden {len(set(previo) & set(top)) / K:.1%} de los clientes. Se guarda el regenerado como {nombre}_regenerado.csv")
+        print(guardar_submit(top, f"{nombre}_regenerado").name)
 else:
     print(guardar_submit(top, nombre).name)

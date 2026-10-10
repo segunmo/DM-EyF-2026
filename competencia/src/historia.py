@@ -24,7 +24,7 @@ def cargar_con_lags(meses: list[int], variables: list[str], n: int = 1, solo_con
     filtro_t = f"and a.{TARGET_COL} is not null" if solo_con_target else ""
     sql = (f"select a.*, {lags} from c01 a left join c01 p "
            f"on a.{ID_COL} = p.{ID_COL} and p.{MES_COL} = {mes_anterior_sql('a.' + MES_COL, n)} "
-           f"where a.{MES_COL} in ({lista}) {filtro_t}")
+           f"where a.{MES_COL} in ({lista}) {filtro_t} order by a.{MES_COL}, a.{ID_COL}")   # orden determinista (ver data.py)
     return conectar().sql(sql).df()
 
 

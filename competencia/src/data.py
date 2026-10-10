@@ -21,4 +21,6 @@ def cargar_meses(meses: list[int], solo_con_target: bool = True) -> pd.DataFrame
     """DataFrame con los meses pedidos. Para entrenar/validar usar solo_con_target=True."""
     filtro_t = f"and {TARGET_COL} is not null" if solo_con_target else ""
     lista = ",".join(str(m) for m in meses)
-    return conectar().sql(f"select * from c01 where {MES_COL} in ({lista}) {filtro_t}").df()
+    # ORDER BY explícito: sin él DuckDB devuelve las filas en un orden que cambia entre corridas (lecturas paralelas) y, como el
+    # undersampling sortea por POSICIÓN, cada corrida entrenaba con otros clientes (ver REPRODUCIR.md §0).
+    return conectar().sql(f"select * from c01 where {MES_COL} in ({lista}) {filtro_t} order by {MES_COL}, numero_de_cliente").df()

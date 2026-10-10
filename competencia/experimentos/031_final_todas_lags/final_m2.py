@@ -17,8 +17,10 @@ from scipy.stats import rankdata
 AQUI = Path(__file__).resolve().parent
 sys.path.insert(0, str(AQUI.parents[1] / "src")); sys.path.insert(0, str(AQUI.parents[0] / "004_seleccion_variables")); sys.path.insert(0, str(AQUI.parents[0] / "005_optuna"))
 spec = importlib.util.spec_from_file_location("t028", AQUI.parents[0] / "028_todas_lags" / "run.py"); t028 = importlib.util.module_from_spec(spec); spec.loader.exec_module(t028)
-from config import ID_COL, SEMILLAS  # noqa: E402
+import config  # noqa: E402
+from config import ID_COL  # noqa: E402
 from drift import psi  # noqa: E402
+from modelos import guardar_modelo, verificar_orden_cache  # noqa: E402
 from multiclase import entrenar, etiquetas, filas, score_cond  # noqa: E402
 from validacion import PARAMS_BASE  # noqa: E402
 
@@ -34,7 +36,7 @@ def escribir(msg):
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(); ap.add_argument("--semillas", type=int, default=10); ap.add_argument("--psi", type=float, default=0.20)
     ap.add_argument("--min_data", default="", help="min_data_in_leaf para M1 top1,top2,top3 separados por coma (032/033: meseta en 50-80)"); args = ap.parse_args()
-    semillas = (SEMILLAS + [int(s) for s in np.random.RandomState(SEMILLAS[0]).randint(100_003, 999_983, size=max(args.semillas - 5, 0))])[:args.semillas]
+    semillas = config.semillas(args.semillas)                       # semillas explícitas en config.py (5 propias + derivadas)
     js = json.loads((t028.A005 / "mejores_trials.json").read_text())
     cfg = {tuple(k.split("_")): (d["r"], d["num_boost_round"], {**PARAMS_BASE, **{a: b for a, b in d.items() if a not in ("r", "num_boost_round")}}) for k, d in js.items() if k.startswith("M1")}
     TAG = ""
@@ -52,13 +54,17 @@ if __name__ == "__main__":
     (AQUI / "drop_psi.txt").write_text("\n".join(f"{c}\t{p[c]:.3f}" for c in drop) + "\n")
     cols = [c for c in cols if c not in drop]; y3 = etiquetas(dt)
     escribir(f"\n===== 031 final M2 {time.strftime('%Y-%m-%d %H:%M')} | train {dt.shape} | {len(cols)} columnas (excluidas por PSI>{args.psi}: {len(drop)}: {drop}) | {len(semillas)} semillas × {len(cfg)} configs | min_data: {args.min_data or "originales"} =====")
+    verificar_orden_cache(TMP, sc[ID_COL].values)                       # no mezclar predicciones cacheadas con otro orden de filas
     t0, S = time.time(), {}
     for (c, nombre), (r, rondas, params) in cfg.items():
         ps = []
         for s in semillas:
             f = TMP / f"m2_{TAG}{c}_{nombre}_{s}.npy"
             if not f.exists():
-                np.save(f, score_cond(entrenar(params, dt[cols], y3, filas(y3, r, s), s, rondas).predict(sc[cols])))
+                m = entrenar(params, dt[cols], y3, filas(y3, r, s), s, rondas)
+                sc_ = score_cond(m.predict(sc[cols]))
+                guardar_modelo(m, f"031_m2_{TAG}{c}_{nombre}_{s}", sc_)
+                np.save(f, sc_)
             ps.append(np.load(f))
         S[f"{c}_{nombre}"] = np.mean(ps, axis=0); escribir(f"listo {c} {nombre} ({len(semillas)} semillas, {(time.time()-t0)/60:.0f} min)")
     rk = np.mean([rankdata(v) / len(v) for v in S.values()], axis=0)

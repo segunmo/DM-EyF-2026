@@ -1,0 +1,19 @@
+# Versiones EXACTAS con las que se generó el submit final (Python 3.14.2, macOS). Instalar con: pip install -r requirements-lock.txt
+# Los resultados de LightGBM dependen de la versión de la librería: no actualizar si se quiere reproducir el submit.
+numpy==2.5.3
+pandas==3.0.5
+scipy==1.18.1
+scikit-learn==1.9.1
+duckdb==1.5.5
+duckdb-engine==0.17.0
+jupysql==0.11.1
+lightgbm==4.7.0
+optuna==5.0.0
+matplotlib==3.11.2
+seaborn==0.13.2
+plotly==7.1.0
+tqdm==4.70.1
+requests==2.34.2
+joblib==1.6.0
+jupyterlab==4.6.4
+pyarrow==25.0.1

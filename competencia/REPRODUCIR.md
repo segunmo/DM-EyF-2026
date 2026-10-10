@@ -1,36 +1,74 @@
 # Cómo regenerar el submit final de la Primera Competencia
 
+> ⚠️ **Antes de leer: qué se puede y qué no se puede garantizar (revisión del 2026-10-10, ver §0).**
+
 **Submit final entregado: `competencia/submissions/exp031_final_w67_md_k12000.csv`** (un solo archivo, 12.000 clientes, Public 103.21M; Línea de Muerte ≈ 100M en Public, Private ≈ 3 × Public).
 Qué es: ranking que combina, por rank, **2/3 de M2** (multiclase CONTINUA/BAJA+1/BAJA+2 con todas las variables con lag1, lag2 y diferencias, 855 columnas, 3 configuraciones de Optuna × 10 semillas) y **1/3 del blend anterior** `exp024` (a su vez 50/50 entre el blend 017 + 010 y 8 modelos de la receta del profe). Pesos efectivos aproximados: M2 67%, receta 17%, 017 8%, 010 8%.
 
-> Los términos técnicos (fold, M0/M1/M2, error estándar, PSI, etc.) están explicados en [`GLOSARIO.md`](GLOSARIO.md).
-
 Todo parte del dataset original (`data/competencia_01.csv`, con `clase_ternaria`, que se construye con `clases/z101_target_sql.ipynb`; fuera de git). Python 3.14, dependencias en `requirements.txt`. Semillas propias en `competencia/src/config.py` (`SEMILLAS = 852583, 771227, 676057, 482687, 399221`; las demás se derivan de la primera con `RandomState(852583)`). Comandos desde la raíz del repo, con `source venv/bin/activate`.
 
-## 1. Datos
-`data/competencia_01.parquet.gzip` se genera con `clases/z701_drifting.ipynb` (o `src/data.py` cae al CSV si no existe). `config.CORREGIR_CCAJAS = True` pone `ccajas_depositos` en NA solo en 202105 (la columna viene rota: todo 0); los scripts de 008 en adelante y todos los del final lo activan solos (el default es False para que 001–007 sigan reproducibles).
+## 0. Qué se puede y qué no se puede reproducir (leer primero)
+**Hallazgo (2026-10-10):** al clonar el repo y reentrenar un modelo del final (M2, semilla 852583) **no se obtuvo el mismo modelo** que el guardado: el top-12.000 de cada modelo coincidía solo en 94–95% (rank Spearman 0.986–0.989, diferencia máxima de probabilidad 0.16–0.22).
+**Causa:** el ORDEN de las filas al cargar varios meses con DuckDB **no era determinista** (joins paralelos: hashes de orden distintos entre corridas). El undersampling sortea con `rand(n)` por **posición**, así que cada corrida entrenaba con otros clientes. LightGBM en sí es determinista (verificado: mismas predicciones con 1, 4 o todos los hilos).
+**Consecuencia:** el archivo ya enviado (`exp031_final_w67_md_k12000.csv`) se generó con un orden de filas que **no se puede recuperar** (se probó el orden natural del parquet, el orden de 1 hilo y el orden más frecuente de DuckDB: ninguno reproduce los modelos guardados). **No es regenerable bit a bit** desde este repo.
+**Corrección aplicada (commit posterior a `a056d77`):**
+- `ORDER BY foto_mes, numero_de_cliente` en `data.cargar_meses` y `historia.cargar_con_lags`: orden fijo (huella del orden de los 4 meses de train: `a1db22d02f`).
+- `deterministic=True` + `force_row_wise=True` en `PARAMS_BASE` y en la receta (no cambia el resultado respecto de no ponerlos; fija el comportamiento con cualquier número de hilos).
+- Semillas listadas explícitamente en `competencia/src/config.py` (`SEMILLAS`, `SEMILLAS_DERIVADAS`, `SEMILLAS_FINAL`, `semillas(n)`) con una aserción contra su generador; los scripts del final las toman de ahí.
+- Versiones exactas en `requirements-lock.txt`.
+- `competencia/verificar_determinismo.py`: comprobación de ~1 minuto.
+**Qué garantiza hoy el repo (verificado el 2026-10-10):**
+- **Dos copias independientes del código corregido, entrenando desde cero los 3 modelos de M2 con la semilla 852583, producen archivos de modelo y predicciones idénticos bit a bit** (huellas SHA-256 iguales). Antes de la corrección, un clon daba un top-12.000 distinto.
+- El resultado regenerado es **estadísticamente equivalente, no idéntico** al modelo del archivo enviado: alineado por cliente, su top-12.000 coincide **~91%** con el del modelo original de una semilla (Spearman 0.98), del orden de cambiar de semilla. Con 10 a 30 semillas por configuración la coincidencia del ensemble final será mayor (no medida todavía).
+- **Guarda anti-mezcla:** las predicciones cacheadas son posicionales; los scripts del final rechazan (error explícito) un `tmp/` generado con otro orden de filas, para que los scores nunca queden asignados a clientes equivocados. El `tmp/` histórico del repo original es rechazado a propósito: usar un clon limpio.
+**Para que lo entregado sea exactamente regenerable** hay dos caminos: (a) correr §3 con el código corregido, y reenviar ese archivo como final; (b) aceptar el archivo ya enviado como entregado y documentar que su reproducción es "equivalente, no idéntica". La decisión está pendiente del alumno.
+**Sobre las semillas:** el final usa las 5 propias más hasta 25 **derivadas** de la primera (30 en 017, 10 en 031, 8 en 024, 6 en 010). Solo 3 de las 25 son primos y ninguna figura en el check-in de Zulip. Si la cátedra exige solo las 5 registradas, hay que reentrenar con `SEMILLAS` solas y el resultado cambia.
+
+## 0b. Modelos guardados y huellas (desde 2026-10-10)
+- Antes **ningún script guardaba los modelos**: solo las predicciones sobre 202108 (`tmp/*.npy`, no versionadas por ser scores por cliente), por eso cada cambio obligaba a reentrenar (30–90 minutos).
+- Ahora cada modelo del final se guarda en `artifacts/modelos_final/<nombre>.txt` (formato texto de LightGBM; **~35 MB por modelo multiclase**: ~1 GB para M2 y ~10 GB para 017). **No se versionan** (tamaño y repo público).
+- Lo que **sí** se versiona es `competencia/modelos_manifiesto.csv`: por cada modelo, la huella SHA-256 del archivo y de su predicción. `venv/bin/python competencia/verificar_modelos.py` compara los modelos regenerados contra esas huellas.
+- Si ya existe la predicción en `tmp/` el script no reentrena (y entonces no genera el modelo): para regenerar los modelos hay que borrar `tmp/` o correr en un clon limpio.
+
+## 1. Datos y entorno
+```bash
+python3.14 -m venv venv && source venv/bin/activate
+pip install -r requirements-lock.txt                 # versiones exactas (requirements.txt, sin versiones, es para uso general)
+venv/bin/python competencia/preparar_datos.py        # ~3 min: baja el CSV crudo, construye clase_ternaria y genera el parquet en data/
+venv/bin/python competencia/verificar_determinismo.py   # ~1 min: debe imprimir OK en las dos líneas
+```
+- `preparar_datos.py` reemplaza a los notebooks `z101` y `z701` (mismos pasos: SQL de la celda 27 de z101 y el `to_parquet` de la celda 3 de z701). **Verificado el 2026-10-10:** reconstruye un CSV con las mismas 983.061 filas que el original (0 filas de diferencia en ambos sentidos) y un parquet con las mismas columnas, tipos y contenido.
+- El orden de filas de esos archivos **no importa**: el código ordena siempre por (`foto_mes`, `numero_de_cliente`) al cargar (§0).
+- `config.CORREGIR_CCAJAS = True` pone `ccajas_depositos` en NA solo en 202105 (viene rota: todo 0); todos los scripts del final lo activan solos (el default es False para que 001–007 sigan reproducibles).
+- Requisitos: ~12 GB de disco para los modelos guardados (§0b), ~16 GB de RAM (cada entrenamiento de M2 maneja 654.066 filas × 855 columnas), y un entorno de 10 núcleos para los tiempos de abajo.
 
 ## 2. Qué está versionado y qué no
 - **Versionado:** código, hiperparámetros de los 6 trials de Optuna (`005_optuna/mejores_trials.json`, idénticos a los de la base SQLite, verificado), columnas M1 (`005_optuna/sel/top150_*.txt`), lista de 50 variables con historia (`003a_lag1_delta/variables_historia.txt`), lista de 142 variables (`008c_lags_150/variables_150.txt`), columnas excluidas por PSI (`031_final_todas_lags/drop_psi.txt`).
 - **No versionado (se regenera):** `data/`, `artifacts/` (base de Optuna), `tmp/` de cada experimento (scores por cliente, modelos por semilla) y los CSV de `submissions/` (listas de `numero_de_cliente`; el repo es público). El registro de cada envío está en `submissions/REGISTRO.md`.
 
 ## 3. Del dataset al submit final (en este orden)
+Los cuatro modelos son independientes entre sí; el orden de abajo es el de las dependencias de la mezcla (3.5). Tiempos **medidos en una máquina de 10 núcleos** (logs de `017_final`, `024_final_receta`, `031_final_todas_lags`, `010_multiclase`); el guardado de modelos y huellas agrega segundos por modelo.
 ```bash
-# 3.1 modelo 017: MIX6 multiclase + auxiliar de BAJA+1 + lag2 en M1, 30 semillas/config      (~4.5 h) -> 017_final/tmp/scores_202108_conlag2.csv
+# 3.1  017  MIX6 multiclase + auxiliar de BAJA+1 + lag2 en M1; 6 configs × 30 semillas (360 modelos)      ~4 h 25 min
 venv/bin/python competencia/experimentos/017_final/final.py --semillas 30 --k 11000 --lag2
-# 3.2 modelo 010: MIX6 multiclase sin auxiliar ni lag2, 6 semillas/config                      (~40 min) -> 010_multiclase/tmp/proba_202108.csv
+# 3.2  010  MIX6 multiclase sin auxiliar ni lag2; 6 configs × 6 semillas (36 modelos)                    ~40 min
 venv/bin/python competencia/experimentos/010_multiclase/final.py
-# 3.3 receta del profe: multiclase sin undersampling, 512 hojas, 8 semillas                    (~40 min) -> 024_final_receta/tmp/scores_rec_202108.csv
+# 3.3  024  receta del profe: multiclase sin undersampling, 512 hojas, 8 semillas (8 modelos)             ~40 min
 venv/bin/python competencia/experimentos/024_final_receta/final_rec.py --semillas 8
-# 3.4 M2: todas las variables con lags 1 y 2 y diferencias, 3 configs × 10 semillas            (~50 min) -> 031_final_todas_lags/tmp/scores_m2_md50-65-80_202108.csv
+# 3.4  031  M2: todas las variables con lag1, lag2 y diferencias; 3 configs × 10 semillas (30 modelos)   ~50 min
 venv/bin/python competencia/experimentos/031_final_todas_lags/final_m2.py --semillas 10 --min_data 50,65,80
-# 3.5 mezcla final por rank: 2/3 M2 + 1/3 (017 + 010 + receta), k=12000                       (segundos) -> submissions/exp031_final_w67_md_k12000.csv
+# 3.5  mezcla por rank: 2/3 M2 + 1/3 (017 + 010 + receta), k=12000                                       segundos
 venv/bin/python competencia/experimentos/031_final_todas_lags/blend_m2.py 0.6667 12000 scores_m2_md50-65-80_202108.csv
+# 3.6  verificación: huellas de los modelos regenerados contra el manifiesto versionado
+venv/bin/python competencia/verificar_modelos.py
 ```
-Cada modelo se guarda por (configuración, semilla) en `tmp/` y se reutiliza si se corta. Si el archivo de salida ya existe, `017_final/final.py` lo compara con lo regenerado (verificado: idéntico). `blend_m2.py` reconstruye en memoria la parte `exp024` a partir de los scores de 017, 010 y la receta (no necesita el CSV de `exp024`).
-Tiempo total ≈ 7 h de cómputo en una máquina de 10 núcleos (estimaciones medidas en esta máquina; con la base de Optuna ya hecha).
+**Medición de hilos (2026-10-10, M2 top1, 1 semilla, 654.066 filas × 855 columnas):** 91 s con 10 hilos y 115 s con 1 hilo (solo 26% más lento). Como el modelo determinista da lo mismo con cualquier cantidad de hilos, la regeneración **se podría paralelizar por procesos** (varios modelos a la vez con 1 hilo cada uno) con un rendimiento teórico de hasta ~8× sobre el secuencial. **No está implementado ni medido a escala**: cada proceso mantiene ~2–3 GB de datos y la máquina de referencia tiene 17 GB de RAM, lo que limita a ~4 procesos.
+**Tiempo total: ≈ 6 h 35 min de cómputo secuencial** (más ~5 min de preparación de datos). Salida: `competencia/submissions/exp031_final_w67_md_k12000.csv`; si ya existe un archivo con ese nombre y es distinto, el regenerado se guarda como `..._regenerado.csv` (no se pisa el enviado).
+- Cada predicción se guarda por (configuración, semilla) en `tmp/` y los modelos en `artifacts/modelos_final/`; si se corta, al relanzar se retoma. **Para regenerar los modelos hay que correr en un clon limpio o borrar `tmp/`** (si la predicción ya existe, el script no reentrena).
+- Cada script deja los scores que usa la mezcla: 017 → `tmp/scores_202108_conlag2.csv`; 010 → `tmp/proba_202108.csv`; 024 → `tmp/scores_rec_202108.csv`; 031 → `tmp/scores_m2_md50-65-80_202108.csv`.
+- `blend_m2.py` reconstruye en memoria la parte `exp024` a partir de los scores de 017, 010 y la receta; no necesita el CSV de `exp024`.
 
-## 4. Si se quiere repetir todo desde cero (≈ 15 h de cómputo)
+## 4. Si se quiere repetir todo desde cero (≈ 15 h de cómputo: 8 h de Optuna + 6,5 h de §3)
 1. `005_optuna/seleccion.py` → importancias y `sel/top150_*.txt` (selección con el train de cada fold; canaritos solo para excluir ruido).
 2. `005_optuna/optuna_run.py --horas 8` → base SQLite en `artifacts/optuna/` (no versionada); `reevaluar.py` y `final.py` eligen y guardan `mejores_trials.json`. (Los scripts de validación de 013, 015 y 016 en adelante leen esa base vía `reevaluar.configs()`; los del final leen el JSON.)
 3. Los cinco pasos del apartado 3.

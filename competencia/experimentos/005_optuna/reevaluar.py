@@ -21,7 +21,7 @@ from pool import cargar  # noqa: E402
 from validacion import KS, xy  # noqa: E402
 
 FOLDS = {"A": ([202103], 202105), "B": ([202103, 202104], 202106), "Bh": ([202104], 202106)}
-SEMILLAS_20 = pd.read_csv(AQUI.parents[0] / "002_eda_variables" / "resultados_20s.csv").query("variante == 'V0_baseline' and fold == 'A'").semilla.tolist()
+from config import SEMILLAS_20  # noqa: E402,F811  (explícitas en config.py; antes se leían de 002/resultados_20s.csv)
 SEMILLAS_REEVAL = SEMILLAS_20[2:12]
 N_TOP = 3
 
