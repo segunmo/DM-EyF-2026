@@ -3,6 +3,8 @@
 **Submit final entregado: `competencia/submissions/exp031_final_w67_md_k12000.csv`** (un solo archivo, 12.000 clientes, Public 103.21M; Línea de Muerte ≈ 100M en Public, Private ≈ 3 × Public).
 Qué es: ranking que combina, por rank, **2/3 de M2** (multiclase CONTINUA/BAJA+1/BAJA+2 con todas las variables con lag1, lag2 y diferencias, 855 columnas, 3 configuraciones de Optuna × 10 semillas) y **1/3 del blend anterior** `exp024` (a su vez 50/50 entre el blend 017 + 010 y 8 modelos de la receta del profe). Pesos efectivos aproximados: M2 67%, receta 17%, 017 8%, 010 8%.
 
+> Los términos técnicos (fold, M0/M1/M2, error estándar, PSI, etc.) están explicados en [`GLOSARIO.md`](GLOSARIO.md).
+
 Todo parte del dataset original (`data/competencia_01.csv`, con `clase_ternaria`, que se construye con `clases/z101_target_sql.ipynb`; fuera de git). Python 3.14, dependencias en `requirements.txt`. Semillas propias en `competencia/src/config.py` (`SEMILLAS = 852583, 771227, 676057, 482687, 399221`; las demás se derivan de la primera con `RandomState(852583)`). Comandos desde la raíz del repo, con `source venv/bin/activate`.
 
 ## 1. Datos
@@ -55,6 +57,7 @@ Validación: todos los folds validan en 202105 (A) o 202106 (B, Bh, L, B2); 2021
 | Peso 2/3 M2 + 1/3 blend anterior | **juicio**, no validado: 030 mostró M2 +8.8M sobre el pool anterior en B2 y la mezcla 50/50 +5.9M; el resto aporta diversidad y cobertura | baja |
 
 ## 6. Descartado con evidencia (para el video a Michelina)
+Plan de cierre de huecos 037 (COBERTURA.md, 0 de 9 variantes pasan BH): canarios sobre las 855 columnas (−122M), quitar 202103 (+1.9 ± 1.6M), deflactar montos (−1.4 ± 0.7M), M2 sin undersampling (+1.8 ± 2.9M), configuraciones M0 sobre las mismas columnas (+0.6 ± 0.5M), hojas de Random Forest (−12 a −47M).
 Fechas y calendario (002), percentiles del mes agregados (003c), regla canarito estricta (004), k por probabilidades calibradas (005c), más variables con lag1 en binario (008c; el patrón con todas las variables y multiclase sí funciona, 028), lags de features derivadas, eventos de productos, agregados y comisiones normalizadas (011), receta del profe en **binario** con grilla truncada (009; corregido en 021), pesos por mes (014: −3.7M al mes viejo; 020: −2.5M al reciente), `extra_trees`, `path_smooth`, `min_gain_to_split` (022), binario con ambas bajas sobre las 855 columnas (034: −4 a −9M), rank del mes en [−1, 1] (027: −4 a −19M), tendencias por variable (035: +1 a +3M, no pasa la regla de > 2 ee en ambos folds), Optuna completo sobre M2 (no hay fold independiente para certificarlo; búsqueda dirigida en 032/033).
 
 ## 7. Public de referencia (25% de 202108)

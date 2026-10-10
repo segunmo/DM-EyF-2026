@@ -9,11 +9,11 @@ Límite: solo cubre lo que las fuentes mencionan. No puede mostrar ideas que nin
 | 1.1 `ccajas_depositos` = NA en 202105 | ✅ | 008a (sin efecto medible; aplicado por corrección) |
 | 1.3 Feature engineering intra mes (listas en blanco en el mensaje) | ◐ | 003c, 003d, 011 (ratios y negocio entran; agregados/eventos no ayudan) |
 | 1.4 Lags y delta lags de orden 1 **y 2** | ✅ (tarde) | 028–030, 036: leído primero como "50 variables"; la receta con todas las variables llegó recién en 028 |
-| 1.5 Variables hojas de Random Forest | ✗ | Nunca probado (se enseñó en la clase 08). Riesgo de fuga si las hojas se arman con las mismas filas |
-| 1.6 Canaritos asesinos | ◐ | 004 (regla estricta sobre 319 columnas; solo aceleró). **No probado sobre las 855 columnas de M2** |
-| 1.7 Sin undersampling | ◐ | 007/009 (binario, grilla truncada), 021 (multiclase, 150 columnas: no pierde). **M2 (855 columnas) con r=1 no probado** |
+| 1.5 Variables hojas de Random Forest | ✅ | **037f**: −46.5M (categóricas) / −12.1M (numéricas), 0/8 pares; diseño sin fuga (RF con 202103–04, LightGBM con 202105–06). Un solo diseño probado |
+| 1.6 Canaritos asesinos | ✅ | 004 (319 columnas) y **037a (855 columnas: −122M, solo 22 columnas superan al canario máximo)**: sin ganancia en esta forma |
+| 1.7 Sin undersampling | ✅ | 007/009 (binario, grilla truncada), 021 (multiclase, 150 columnas: no pierde), **037d (M2 855 columnas: r=1.0 +1.8 ± 2.9M, r=0.3 +2.9 ± 2.2M; sin ganancia detectable)** |
 | 1.7 Métrica AUC, `max_bin`=31, `min_data_in_leaf`=0, ff 0.5, bynode 0.2, lr 0.005 | ✅ | 009, 021 (receta; componente del final) |
-| 2.1 10+ modelos con hiperparámetros distintos, sin undersampling | ◐ | M2: 3 configuraciones × 10 semillas **con** undersampling |
+| 2.1 10+ modelos con hiperparámetros distintos, sin undersampling | ✅ | M2: 3 configs × 10 semillas con undersampling; **037e: sumar 3 configs M0 sobre las mismas columnas +0.6 ± 0.5M**; 037d: sin undersampling sin ganancia |
 | 2.2 Promediar probabilidades | ✅ | 009b, 013: el rank rinde igual o algo mejor |
 | 2.3 Cortes 10000, 10500, 11000… | ✅ | 015, 018, 025 |
 
@@ -30,10 +30,10 @@ Límite: solo cubre lo que las fuentes mencionan. No puede mostrar ideas que nin
 | 20.4 Transformaciones (lineal, log, normalización) | — | Conceptual: invariantes para árboles. El rank dentro del mes (027) perjudica |
 | 20.5–20.7 Históricas, lags y delta lags, tendencias | ✅ | 003a/b, 008, 016, 028–030, 035, 036 |
 | 20.8 Medias móviles | ◐ | Solo como "cambio relativo a la media de 3 meses" (035); no como columna propia |
-| 20.9 Ajuste por inflación | ◐ | Solo vía rank del mes (027, perjudica) y comisiones normalizadas (011). **No se probó deflactar los montos por un índice mensual** |
-| 20.10 Hojas de un Random Forest | ✗ | Ver 1.5 |
-| 20.11 Reducción de dimensionalidad para acelerar | ◐ | 004 (top150). Canarios sobre M2: no |
-| 24.1 Mejores períodos para entrenar | ◐ | 020 (pesos), B vs Bh (más meses ayuda). **No se probó quitar el mes más viejo en el régimen de M2** |
+| 20.9 Ajuste por inflación | ✅ | Rank del mes (027: perjudica), comisiones normalizadas (011) y **deflactar por factor mensual (037c: −1.4 ± 0.7M)**; ojo: el factor mezcla inflación y aguinaldo |
+| 20.10 Hojas de un Random Forest | ✅ | Ver 1.5 (037f) |
+| 20.11 Reducción de dimensionalidad para acelerar | ✅ | 004 (top150) y 037a (canarios sobre M2: destruyen el modelo) |
+| 24.1 Mejores períodos para entrenar | ✅ | 020 (pesos), B vs Bh (más meses ayuda), **037b (quitar 202103: +1.9 ± 1.6M, neutro)** |
 | 24.2 Evitar cross validation | ✅ | Folds out-of-time en todo el trabajo |
 | 24.3 Undersampling | ✅ | 007, 009, 021 |
 | 25.2 Valores Shapley | ✗ | No hecho (interpretabilidad; el video a Miranda ya se entregó) |
@@ -128,3 +128,23 @@ Numeración desde el 037. Cada uno corre sobre el mismo harness; los tres primer
 - Cada experimento nuevo sobre los mismos datos suma riesgo de sobreajuste: por eso BH y el umbral de +3M.
 - El proxy es BAJA+1, no BAJA+2: la confirmación en L/B2 es obligatoria, pero esos folds tienen los targets solapados. Una variante que solo pase en uno de los dos entornos **no** se adopta.
 - Ninguno de estos experimentos puede resolver si la ola de salidas de clientes con préstamo y mora persiste en 202110.
+
+---
+
+# RESULTADO DEL PLAN DE CIERRE DE HUECOS (2026-10-09)
+Familia de **9 pruebas** (8 planeadas + 1 exploratoria posterior), Benjamini–Hochberg q = 0.10, mínimo +3M, proxy 202107 con 5–8 semillas pareadas (`037_hojas_rf/bh_final.py`, `bh_final.csv`):
+
+| Prueba | Δ (M) | ee | Pares | p unilateral | ¿Pasa? |
+|---|---|---|---|---|---|
+| 037d r = 0.3 (más negativos) | +2.9 | 2.2 | 3/5 | 0.13 | No |
+| 037b sin 202103 | +1.9 | 1.6 | 5/8 | 0.14 | No |
+| 037e + configuraciones M0 | +0.6 | 0.5 | 4/8 | 0.16 | No |
+| 037d r = 1.0 (sin undersampling) | +1.8 | 2.9 | 3/5 | 0.29 | No |
+| 037c deflactado | −1.4 | 0.7 | 2/8 | 0.94 | No |
+| 037a canarios > máximo (22 columnas) | −122.2 | 3.1 | 0/8 | 1.00 | No |
+| 037a canarios > p90 (30 columnas) | −122.4 | 3.1 | 0/8 | 1.00 | No |
+| 037f hojas de RF categóricas | −46.5 | 1.5 | 0/8 | 1.00 | No |
+| 037f hojas de RF numéricas (posterior) | −12.1 | 1.3 | 0/8 | 1.00 | No |
+
+**Ninguna variante pasa. El final (`exp031_final_w67_md_k12000.csv`) no cambia.** Lo que quedó en ✅ en las secciones 1 y 2 de este documento es "probado, sin ganancia en esta forma". Huecos que **siguen sin probarse** (los más caros o sin forma de validarse): stacking, Shapley sobre el modelo, outliers e imputación, features de cohorte con la distancia de RF, y el auxiliar de BAJA+1 sobre M2.
+

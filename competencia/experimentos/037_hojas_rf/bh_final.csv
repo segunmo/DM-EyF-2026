@@ -1,0 +1,10 @@
+variante,delta_M,ee,pares+,p_unilateral,umbral_BH,significativa_BH,pasa
+037d_r0.3,2.86,2.1838,3/5,0.1302,0.0111,False,False
+037b_sin202103,1.9078,1.6283,5/8,0.1398,0.0222,False,False
+037e_E6-E3,0.5844,0.5412,4/8,0.158,0.0333,False,False
+037d_r1.0,1.7875,2.933,3/5,0.2876,0.0444,False,False
+037c_deflactado,-1.3578,0.7466,2/8,0.9441,0.0556,False,False
+037a_max,-122.2203,3.0953,0/8,1.0,0.0667,False,False
+037a_p90,-122.4266,3.0915,0/8,1.0,0.0778,False,False
+037f_hojas_rf,-46.5266,1.5125,0/8,1.0,0.0889,False,False
+037f_hojas_rf_numerico(posterior),-12.1,1.2661,0/8,1.0,0.1,False,False

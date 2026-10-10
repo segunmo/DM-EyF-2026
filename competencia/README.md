@@ -19,6 +19,8 @@ experimentos/        NNN_descripcion/ (README.md + scripts/notebook + resultados
 submissions/         CSV enviados + submissions/REGISTRO.md
 LOG.md               bitácora: qué se probó, métrica local, puntaje público, conclusión
 PLAN.md              plan acordado y estado final (arriba)
+GLOSARIO.md          qué significa cada término (fold, M0/M1/M2, ee, PSI, BH…) y cómo leer las tablas
+COBERTURA.md         auditoría de lo que proponían las fuentes y plan de lo que falta
 REPRODUCIR.md        cómo regenerar el submit final desde el dataset, y evidencia de cada decisión
 ../research/         investigación de estrategias de la literatura/industria (hipótesis, no medidas)
 ```

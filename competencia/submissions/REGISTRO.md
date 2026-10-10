@@ -1,6 +1,6 @@
 # Registro de submissions
 
-> **SUBMIT FINAL ENTREGADO: `exp031_final_w67_md` (`exp031_final_w67_md_k12000.csv`, un solo archivo, Public 103.2075M).** Las frases "es el submit final vigente" de las filas anteriores eran ciertas en el momento en que se escribieron y quedaron superadas; se conservan como historia.
+> **SUBMIT FINAL ENTREGADO: `exp031_final_w67_md` (`exp031_final_w67_md_k12000.csv`, un solo archivo, Public 103.2075M).** El alumno confirmó que el último envío al bot ya fue realizado y es este archivo único; no se envían más submits. Las frases "es el submit final vigente" de las filas anteriores eran ciertas en el momento en que se escribieron y quedaron superadas; se conservan como historia.
 
 | Fecha | Nombre del submit (Zulip) | Archivo(s) .csv | Experimento | Cantidad de envíos | Ganancia local | Public Gain mean / std dev | Notas |
 |---|---|---|---|---|---|---|---|
