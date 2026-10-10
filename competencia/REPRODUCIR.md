@@ -42,6 +42,12 @@ venv/bin/python competencia/verificar_determinismo.py   # ~1 min: debe imprimir 
 - `config.CORREGIR_CCAJAS = True` pone `ccajas_depositos` en NA solo en 202105 (viene rota: todo 0); todos los scripts del final lo activan solos (el default es False para que 001–007 sigan reproducibles).
 - Requisitos: ~12 GB de disco para los modelos guardados (§0b), ~16 GB de RAM (cada entrenamiento de M2 maneja 654.066 filas × 855 columnas), y un entorno de 10 núcleos para los tiempos de abajo.
 
+**Verificación del §1 y §3 (2026-10-10, clon limpio del commit `6e31c95`, venv nuevo con `requirements-lock.txt`):**
+- §1 ejecutado al pie de la letra: instalación, descarga (el crudo bajado tiene el mismo md5 que el que ya teníamos), `preparar_datos.py` (~2 min; el parquet resultante es idéntico al original) y `verificar_determinismo.py` (OK, con las mismas huellas `a1db22d02f` y `b916c5cf75`).
+- §3.1 a 3.6 ejecutados con tamaño **reducido solo en el clon** (5 rondas por modelo y 1 semilla) para probar la mecánica: los 6 pasos terminan con código 0, se guardan 22 modelos, el manifiesto tiene 22 huellas y `verificar_modelos.py` informa 22 idénticos. **Esto prueba que los pasos corren y se encadenan; no prueba los números de una corrida completa.**
+- Determinismo a tamaño real: demostrado para los 3 modelos de M2 (dos copias independientes, huellas idénticas). Para 017, 010 y 024 comparten cargador, parámetros y semillas, pero no se repitió una corrida completa.
+- Requisito: Python 3.14 instalado en el sistema (el lock se generó con 3.14.2). No se verificó en otro sistema operativo ni arquitectura de CPU.
+
 ## 2. Qué está versionado y qué no
 - **Versionado:** código, hiperparámetros de los 6 trials de Optuna (`005_optuna/mejores_trials.json`, idénticos a los de la base SQLite, verificado), columnas M1 (`005_optuna/sel/top150_*.txt`), lista de 50 variables con historia (`003a_lag1_delta/variables_historia.txt`), lista de 142 variables (`008c_lags_150/variables_150.txt`), columnas excluidas por PSI (`031_final_todas_lags/drop_psi.txt`).
 - **No versionado (se regenera):** `data/`, `artifacts/` (base de Optuna), `tmp/` de cada experimento (scores por cliente, modelos por semilla) y los CSV de `submissions/` (listas de `numero_de_cliente`; el repo es público). El registro de cada envío está en `submissions/REGISTRO.md`.
