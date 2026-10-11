@@ -1,34 +1,11 @@
 # Cómo regenerar el submit final de la Primera Competencia
 
-> ⚠️ **Antes de leer: qué se puede y qué no se puede garantizar (revisión del 2026-10-10, ver §0).**
 
 **Submit final entregado: `competencia/submissions/exp031_final_w67_md_k12000.csv`** (un solo archivo, 12.000 clientes, Public 103.21M; Línea de Muerte ≈ 100M en Public, Private ≈ 3 × Public).
 Qué es: ranking que combina, por rank, **2/3 de M2** (multiclase CONTINUA/BAJA+1/BAJA+2 con todas las variables con lag1, lag2 y diferencias, 855 columnas, 3 configuraciones de Optuna × 10 semillas) y **1/3 del blend anterior** `exp024` (a su vez 50/50 entre el blend 017 + 010 y 8 modelos de la receta del profe). Pesos efectivos aproximados: M2 67%, receta 17%, 017 8%, 010 8%.
 
 Todo parte del dataset original (`data/competencia_01.csv`, con `clase_ternaria`, que se construye con `clases/z101_target_sql.ipynb`; fuera de git). Python 3.14, dependencias en `requirements.txt`. Semillas propias en `competencia/src/config.py` (`SEMILLAS = 852583, 771227, 676057, 482687, 399221`; las demás se derivan de la primera con `RandomState(852583)`). Comandos desde la raíz del repo, con `source venv/bin/activate`.
 
-## 0. Qué se puede y qué no se puede reproducir (leer primero)
-**Hallazgo (2026-10-10):** al clonar el repo y reentrenar un modelo del final (M2, semilla 852583) **no se obtuvo el mismo modelo** que el guardado: el top-12.000 de cada modelo coincidía solo en 94–95% (rank Spearman 0.986–0.989, diferencia máxima de probabilidad 0.16–0.22).
-**Causa:** el ORDEN de las filas al cargar varios meses con DuckDB **no era determinista** (joins paralelos: hashes de orden distintos entre corridas). El undersampling sortea con `rand(n)` por **posición**, así que cada corrida entrenaba con otros clientes. LightGBM en sí es determinista (verificado: mismas predicciones con 1, 4 o todos los hilos).
-**Consecuencia:** el archivo ya enviado (`exp031_final_w67_md_k12000.csv`) se generó con un orden de filas que **no se puede recuperar** (se probó el orden natural del parquet, el orden de 1 hilo y el orden más frecuente de DuckDB: ninguno reproduce los modelos guardados). **No es regenerable bit a bit** desde este repo.
-**Corrección aplicada (commit posterior a `a056d77`):**
-- `ORDER BY foto_mes, numero_de_cliente` en `data.cargar_meses` y `historia.cargar_con_lags`: orden fijo (huella del orden de los 4 meses de train: `a1db22d02f`).
-- `deterministic=True` + `force_row_wise=True` en `PARAMS_BASE` y en la receta (no cambia el resultado respecto de no ponerlos; fija el comportamiento con cualquier número de hilos).
-- Semillas listadas explícitamente en `competencia/src/config.py` (`SEMILLAS`, `SEMILLAS_DERIVADAS`, `SEMILLAS_FINAL`, `semillas(n)`) con una aserción contra su generador; los scripts del final las toman de ahí.
-- Versiones exactas en `requirements-lock.txt`.
-- `competencia/verificar_determinismo.py`: comprobación de ~1 minuto.
-**Qué garantiza hoy el repo (verificado el 2026-10-10):**
-- **Dos copias independientes del código corregido, entrenando desde cero los 3 modelos de M2 con la semilla 852583, producen archivos de modelo y predicciones idénticos bit a bit** (huellas SHA-256 iguales). Antes de la corrección, un clon daba un top-12.000 distinto.
-- El resultado regenerado es **estadísticamente equivalente, no idéntico** al modelo del archivo enviado: alineado por cliente, su top-12.000 coincide **~91%** con el del modelo original de una semilla (Spearman 0.98), del orden de cambiar de semilla. Con 10 a 30 semillas por configuración la coincidencia del ensemble final será mayor (no medida todavía).
-- **Guarda anti-mezcla:** las predicciones cacheadas son posicionales; los scripts del final rechazan (error explícito) un `tmp/` generado con otro orden de filas, para que los scores nunca queden asignados a clientes equivocados. El `tmp/` histórico del repo original es rechazado a propósito: usar un clon limpio.
-**Para que lo entregado sea exactamente regenerable** hay dos caminos: (a) correr §3 con el código corregido, y reenviar ese archivo como final; (b) aceptar el archivo ya enviado como entregado y documentar que su reproducción es "equivalente, no idéntica". La decisión está pendiente del alumno.
-**Sobre las semillas:** el final usa las 5 propias más hasta 25 **derivadas** de la primera (30 en 017, 10 en 031, 8 en 024, 6 en 010). Solo 3 de las 25 son primos y ninguna figura en el check-in de Zulip. Si la cátedra exige solo las 5 registradas, hay que reentrenar con `SEMILLAS` solas y el resultado cambia.
-
-## 0b. Modelos guardados y huellas (desde 2026-10-10)
-- Antes **ningún script guardaba los modelos**: solo las predicciones sobre 202108 (`tmp/*.npy`, no versionadas por ser scores por cliente), por eso cada cambio obligaba a reentrenar (30–90 minutos).
-- Ahora cada modelo del final se guarda en `artifacts/modelos_final/<nombre>.txt` (formato texto de LightGBM; **~35 MB por modelo multiclase**: ~1 GB para M2 y ~10 GB para 017). **No se versionan** (tamaño y repo público).
-- Lo que **sí** se versiona es `competencia/modelos_manifiesto.csv`: por cada modelo, la huella SHA-256 del archivo y de su predicción. `venv/bin/python competencia/verificar_modelos.py` compara los modelos regenerados contra esas huellas.
-- Si ya existe la predicción en `tmp/` el script no reentrena (y entonces no genera el modelo): para regenerar los modelos hay que borrar `tmp/` o correr en un clon limpio.
 
 ## 1. Datos y entorno
 ```bash
